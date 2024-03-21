@@ -1,2 +1,2 @@
 # bezier2d-anim
-2D Bezier curve drawing animation
+Demonstratin of cubic Bezier curve construction from control points by javascript 2D canvas animation 
