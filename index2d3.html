@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Bezier curve drawing animation</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="Keywords" content="Bezier, curve, animation">
+<meta name="Description" content="Bezier curve drawing animation">
+<meta name="author" content="webhauser@gmail.com">
+<style>
+* { margin:0; padding:0; } 	/* to remove the top and left whitespace */
+html, body { overflow: hidden;} /* remove scrollbars */
+#myCanvas {
+    position:fixed;
+    left:0;
+    top:0;
+    width:100%;
+    height:100%;
+    border:1px solid #c3c3c3;
+}
+</style>
+</head>
+<body>
+<noscript>JavaScript is Disabled. Please enable javascript and refresh the page</noscript>
+<canvas id="myCanvas">Your browser does not support the canvas element.</canvas>
+<script>
+var colour = "#0000FF";
+var size = 10;
+var coords = [
+	[20,500],
+	[10,10],
+	[1024,10],
+	[1000, 500]
+];
+
+var canvas = document.getElementById("myCanvas");
+var ctx = canvas.getContext("2d");
+
+var t=0.0, dt=1.0/128;
+var p=[];
+
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    render();
+}
+
+window.addEventListener('resize', resize, false); resize();
+
+function dot(x,y) {
+	ctx.fillRect(x,y,1,1);
+}
+
+function mark(x,y,msg) {
+	ctx.fillStyle = colour;
+	ctx.fillRect(x-size/2,y-size/2,size,size);
+	ctx.fillText(msg,x+size+2,y+size+4);
+}
+
+function draw_markers() {
+	var i,c,x,y;
+	ctx.font = "12px Verdana";
+	ctx.beginPath();
+	for(i=0; i<coords.length; i++) {
+		c=coords[i];
+		x=c[0];y=c[1];
+		mark(x,y,"P"+i);
+		if(i==0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+	}
+	ctx.strokeStyle = "#000000";
+	ctx.stroke();
+}
+
+function lp(a,b,t) {
+	return a*(1.0-t)+b*t;
+}
+
+function lc(i,j,k,t) {
+	return lp(coords[i][k],coords[j][k],t);
+}
+
+function bezier2(t) {
+var i=0,
+qx=[lc(0,1,0,t), lc(1,2,0,t), lc(2,3,0,t)], 
+qy=[lc(0,1,1,t), lc(1,2,1,t), lc(2,3,1,t)], 
+rx=[lp(qx[0],qx[1],t), lp(qx[1],qx[2],t)], 
+ry=[lp(qy[0],qy[1],t), lp(qy[1],qy[2],t)],
+x=lp(rx[0],rx[1],t), 
+y=lp(ry[0],ry[1],t);
+
+mark(qx[i],qy[i],"Q"+i); i++;
+mark(qx[i],qy[i],"Q"+i); i++;
+mark(qx[i],qy[i],"Q"+i); i=0;
+mark(rx[i],ry[i],"R"+i); i++;
+mark(rx[i],ry[i],"R"+i); i=0;
+mark(x,y,"S");
+
+ctx.beginPath();
+ctx.moveTo(qx[i],qy[i]); i++;
+ctx.lineTo(qx[i],qy[i]); i++;
+ctx.lineTo(qx[i],qy[i]); i=0;
+ctx.moveTo(rx[i],ry[i]); i++;
+ctx.lineTo(rx[i],ry[i]); 
+ctx.strokeStyle = "#000000";
+ctx.stroke();
+
+return [x,y];
+}
+
+function draw_dots(v) {
+	ctx.fillStyle = colour;
+	for(var i=0; i<v.length; i++) {
+		dot(v[i][0],v[i][1]);
+	}
+}
+
+function draw_lines(v) {
+	ctx.lineWidth=1;
+	ctx.beginPath();
+	for(var i=0; i<v.length; i++) {
+		if(i==0) ctx.moveTo(v[i][0],v[i][1]); 
+		else ctx.lineTo(v[i][0],v[i][1]);
+	}
+	ctx.strokeStyle = colour;
+	ctx.stroke();
+}
+
+function render() {
+	window.requestAnimationFrame(render);
+	ctx.clearRect(0,0,canvas.width,canvas.height);
+	draw_markers();
+	if(dt < 0) draw_lines(p); else draw_dots(p);
+	p.push( bezier2(t) );
+	t+=dt;
+	if(t<0.0 || t>1.0) {
+		dt*=-1.0;
+		p=[];
+	}
+}
+</script>
+</body>
+</html>
